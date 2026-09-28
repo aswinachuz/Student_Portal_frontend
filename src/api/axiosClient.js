@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const rawApiUrl = (import.meta.env.VITE_API_URL || '').trim();
+const rawApiUrl = (
+  import.meta.env.VITE_API_URL ||
+  'https://student-portal-backend-aqst.onrender.com/api'
+).trim();
 
 const getBaseUrl = (url) => {
   if (!url) return '';

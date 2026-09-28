@@ -5,7 +5,10 @@ export const getFileUrl = (filePath) => {
     return filePath;
   }
 
-  const apiUrl = import.meta.env.VITE_API_URL || "";
+  const apiUrl = (
+    import.meta.env.VITE_API_URL ||
+    'https://student-portal-backend-aqst.onrender.com/api'
+  ).trim();
 
   return `${apiUrl.replace(/\/api\/?$/, "")}${filePath}`;
 };
