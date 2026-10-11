@@ -7,13 +7,12 @@ export default function AttendanceRules() {
         Attendance Rules
       </h3>
       <ul className="mt-1.5 space-y-0.5 text-[10px] text-blue-700 dark:text-blue-300">
-        <li>• Only the Class Teacher can submit attendance.</li>
-        <li>• Today's attendance can be entered before submission.</li>
-        <li>• Once submitted, today's attendance is locked.</li>
-        <li>• Previous attendance is read-only for teachers.</li>
+        <li>• The Class Teacher has full authority to mark and edit classroom attendance.</li>
+        <li>• Attendance for any past date or today can be entered or edited at any time.</li>
         <li>• Future dates cannot be marked.</li>
-        <li>• Duty Leave counts as Present.</li>
-        <li>• Admin can correct attendance.</li>
+        <li>• Present (P), Absent (A), and Duty Leave (DL) statuses are supported.</li>
+        <li>• Duty Leave counts as Present towards the attendance percentage.</li>
+        <li>• Changes can be saved per date or across the monthly register.</li>
       </ul>
     </div>
   );

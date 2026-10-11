@@ -2,16 +2,11 @@ import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
-import KineticGrid from "../common/KineticGrid";
-
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="relative min-h-screen">
-      {/* Animated Background */}
-      <KineticGrid />
-
+    <div className="relative min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Application Content */}
       <div className="relative z-10 flex min-h-screen">
         {/* Sidebar */}

@@ -21,8 +21,8 @@ export default function AttendanceManager() {
   const [attendanceLoading, setAttendanceLoading] =
     useState(false);
   const [saving, setSaving] = useState(false);
-  const [todaySubmitted, setTodaySubmitted] =
-    useState(false);
+  const [selectedDate, setSelectedDate] = useState(getTodayDate());
+  const [modifiedDates, setModifiedDates] = useState(new Set());
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -437,150 +437,91 @@ export default function AttendanceManager() {
   // CHANGE ATTENDANCE
   // =====================================================
 
-  const handleAttendanceChange = (
-    studentId,
-    date,
-    status
-  ) => {
-    if (
-      !isToday(date) ||
-      todaySubmitted
-    ) {
+  // =====================================================
+  // CHANGE ATTENDANCE (FOR ANY VALID DAY)
+  // =====================================================
+
+  const handleAttendanceChange = (studentId, date, status) => {
+    if (isFutureDate(date)) {
       return;
     }
 
-    setAttendanceData(
-      (previous) => ({
-        ...previous,
+    setAttendanceData((previous) => ({
+      ...previous,
+      [studentId]: {
+        ...(previous[studentId] || {}),
+        [date]: status,
+      },
+    }));
 
-        [studentId]: {
-          ...(previous[
-            studentId
-          ] || {}),
-
-          [date]: status,
-        },
-      })
-    );
+    setModifiedDates((prev) => new Set(prev).add(date));
+    setSuccess("");
+    setError("");
   };
 
   // =====================================================
-  // MARK ALL PRESENT
+  // QUICK MARK ALL FOR ACTIVE DATE
   // =====================================================
 
-  const markAllPresent = () => {
-    if (todaySubmitted) {
+  const markAllStatusForDate = (targetDate, status) => {
+    if (isFutureDate(targetDate)) {
       return;
     }
 
-    const updatedAttendance = {
-      ...attendanceData,
-    };
+    const updatedAttendance = { ...attendanceData };
 
-    students.forEach(
-      (student) => {
-        if (
-          !updatedAttendance[
-            student._id
-          ]
-        ) {
-          updatedAttendance[
-            student._id
-          ] = {};
-        }
-
-        updatedAttendance[
-          student._id
-        ][today] = "Present";
+    students.forEach((student) => {
+      if (!updatedAttendance[student._id]) {
+        updatedAttendance[student._id] = {};
       }
-    );
+      updatedAttendance[student._id][targetDate] = status;
+    });
 
-    setAttendanceData(
-      updatedAttendance
-    );
+    setAttendanceData(updatedAttendance);
+    setModifiedDates((prev) => new Set(prev).add(targetDate));
+    setSuccess("");
+    setError("");
   };
 
+  const markAllPresent = () => markAllStatusForDate(selectedDate, "Present");
+  const markAllAbsent = () => markAllStatusForDate(selectedDate, "Absent");
+  const markAllDutyLeave = () => markAllStatusForDate(selectedDate, "Duty Leave");
+
   // =====================================================
-  // MARK ALL ABSENT
+  // SAVE ATTENDANCE FOR A GIVEN DATE
   // =====================================================
 
-  const markAllAbsent = () => {
-    if (todaySubmitted) {
+  const handleSaveDate = async (targetDate) => {
+    const saveDate = targetDate || selectedDate;
+
+    if (!saveDate) {
+      setError("Please select a date to save attendance.");
       return;
     }
 
-    const updatedAttendance = {
-      ...attendanceData,
-    };
-
-    students.forEach(
-      (student) => {
-        if (
-          !updatedAttendance[
-            student._id
-          ]
-        ) {
-          updatedAttendance[
-            student._id
-          ] = {};
-        }
-
-        updatedAttendance[
-          student._id
-        ][today] = "Absent";
-      }
-    );
-
-    setAttendanceData(
-      updatedAttendance
-    );
-  };
-
-  // =====================================================
-  // SUBMIT TODAY'S ATTENDANCE
-  // =====================================================
-
-  const handleSubmit = async () => {
-    if (todaySubmitted) {
-      setError(
-        "Today's attendance has already been submitted."
-      );
-
+    if (isFutureDate(saveDate)) {
+      setError("Cannot mark or save attendance for future dates.");
       return;
     }
 
-    if (
-      currentMonth !==
-      getCurrentMonth()
-    ) {
-      setError(
-        "You can submit attendance only for the current month."
-      );
-
+    if (!classroom?._id) {
+      setError("No classroom found.");
       return;
     }
 
     if (students.length === 0) {
-      setError(
-        "No students found."
-      );
-
+      setError("No students found in this classroom.");
       return;
     }
 
-    const incomplete =
-      students.some(
-        (student) =>
-          !attendanceData[
-            student._id
-          ]?.[today]
-      );
+    const incomplete = students.some(
+      (student) => !attendanceData[student._id]?.[saveDate]
+    );
 
     if (incomplete) {
       setError(
-        "Please mark Present, Absent, or Duty Leave for every student."
+        `Please mark attendance (Present, Absent, or Duty Leave) for all students on ${saveDate}.`
       );
-
       return;
     }
 
@@ -589,47 +530,76 @@ export default function AttendanceManager() {
       setError("");
       setSuccess("");
 
-      const attendanceRecords =
-        students.map(
-          (student) => ({
-            studentId:
-              student._id,
+      const attendanceRecords = students.map((student) => ({
+        studentId: student._id,
+        status: attendanceData[student._id][saveDate],
+      }));
 
-            status:
-              attendanceData[
-                student._id
-              ][today],
-          })
-        );
+      await axiosClient.post("/attendance", {
+        classroomId: classroom._id,
+        date: saveDate,
+        attendanceRecords,
+      });
 
-      await axiosClient.post(
-        "/attendance",
-        {
-          classroomId:
-            classroom._id,
+      setModifiedDates((prev) => {
+        const next = new Set(prev);
+        next.delete(saveDate);
+        return next;
+      });
 
-          date: today,
-
-          attendanceRecords,
-        }
-      );
-
-      setTodaySubmitted(true);
-
-      setSuccess(
-        "Today's attendance submitted successfully. It is now locked for teachers."
-      );
-
+      setSuccess(`Attendance for ${saveDate} saved successfully.`);
       await fetchMonthlyAttendance();
     } catch (err) {
-      console.error(
-        "SUBMIT ATTENDANCE ERROR:",
-        err
-      );
-
+      console.error("SAVE ATTENDANCE ERROR:", err);
       setError(
-        err.response?.data?.message ||
-          "Failed to submit attendance."
+        err.response?.data?.message || `Failed to save attendance for ${saveDate}.`
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // =====================================================
+  // SAVE ALL MODIFIED DATES
+  // =====================================================
+
+  const handleSaveAllModified = async () => {
+    const datesToSave = Array.from(modifiedDates).filter((d) => !isFutureDate(d));
+
+    if (datesToSave.length === 0) {
+      setError("No modified dates to save.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError("");
+      setSuccess("");
+
+      for (const d of datesToSave) {
+        const recordsToSave = students
+          .filter((s) => attendanceData[s._id]?.[d])
+          .map((student) => ({
+            studentId: student._id,
+            status: attendanceData[student._id][d],
+          }));
+
+        if (recordsToSave.length > 0) {
+          await axiosClient.post("/attendance", {
+            classroomId: classroom._id,
+            date: d,
+            attendanceRecords: recordsToSave,
+          });
+        }
+      }
+
+      setModifiedDates(new Set());
+      setSuccess(`Attendance for ${datesToSave.length} date(s) saved successfully.`);
+      await fetchMonthlyAttendance();
+    } catch (err) {
+      console.error("SAVE ALL ATTENDANCE ERROR:", err);
+      setError(
+        err.response?.data?.message || "Failed to save modified attendance dates."
       );
     } finally {
       setSaving(false);
@@ -883,18 +853,6 @@ export default function AttendanceManager() {
         </div>
       )}
 
-      {/* LOCKED */}
-      {todaySubmitted && currentMonth === getCurrentMonth() && (
-        <div className="rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950 px-3 py-2 dark:border-green-800 dark:bg-green-950">
-          <p className="text-xs font-semibold text-green-800 dark:text-green-200">
-            Today's attendance has been submitted.
-          </p>
-          <p className="mt-0.5 text-[10px] text-green-700 dark:text-green-300">
-            Today's attendance is locked. Only an admin can make corrections.
-          </p>
-        </div>
-      )}
-
       {/* LEGEND */}
       <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-900 px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-gray-800">
         <div className="flex flex-wrap items-center gap-4 text-xs">
@@ -920,7 +878,7 @@ export default function AttendanceManager() {
           </div>
 
           <span className="text-[10px] text-slate-500 dark:text-slate-400">
-            Duty Leave counts as Present.
+            Duty Leave counts as Present. Class teachers can edit any day's attendance.
           </span>
         </div>
       </div>
@@ -935,12 +893,16 @@ export default function AttendanceManager() {
       <AttendanceActionBar
         search={search}
         setSearch={setSearch}
-        isCurrentMonth={currentMonth === getCurrentMonth()}
-        todaySubmitted={todaySubmitted}
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+        today={today}
         saving={saving}
+        modifiedDatesCount={modifiedDates.size}
         onMarkAllPresent={markAllPresent}
         onMarkAllAbsent={markAllAbsent}
-        onSubmit={handleSubmit}
+        onMarkAllDutyLeave={markAllDutyLeave}
+        onSaveDate={handleSaveDate}
+        onSaveAll={handleSaveAllModified}
       />
 
       {/* ATTENDANCE REGISTER */}
@@ -952,7 +914,8 @@ export default function AttendanceManager() {
         monthDays={monthDays}
         attendanceData={attendanceData}
         today={today}
-        todaySubmitted={todaySubmitted}
+        selectedDate={selectedDate}
+        onSelectDate={setSelectedDate}
         attendanceLoading={attendanceLoading}
         registerScrollRef={registerScrollRef}
         todayHeaderRef={todayHeaderRef}

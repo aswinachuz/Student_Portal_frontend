@@ -164,10 +164,10 @@ export default function AdminDashboard() {
                   </div>
                   <div>
                     <h3 className="text-xs font-semibold text-slate-900 transition group-hover:text-amber-600 dark:text-white dark:group-hover:text-amber-400">
-                      Attendance Correction
+                      Teacher Attendance
                     </h3>
                     <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                      View and override daily registers
+                      Mark & manage faculty attendance
                     </p>
                   </div>
                 </div>

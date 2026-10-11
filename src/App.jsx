@@ -21,8 +21,8 @@ const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const TeacherManagement = lazy(() => import("./pages/admin/TeacherManagement"));
 const ClassroomManagement = lazy(() => import("./pages/admin/ClassroomManagement"));
 const Announcements = lazy(() => import("./pages/admin/Announcements"));
-const AdminAttendanceCorrection = lazy(() =>
-  import("./pages/admin/AdminAttendanceCorrection")
+const TeacherAttendance = lazy(() =>
+  import("./pages/admin/TeacherAttendance")
 );
 
 // ================= STUDENT =================
@@ -91,7 +91,7 @@ export default function App() {
                     />
                     <Route
                       path="/admin/attendance"
-                      element={<AdminAttendanceCorrection />}
+                      element={<TeacherAttendance />}
                     />
                     <Route
                       path="/admin/announcements"

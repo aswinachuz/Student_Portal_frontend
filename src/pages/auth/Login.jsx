@@ -15,7 +15,6 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import axiosClient from "../../api/axiosClient";
 import { getFileUrl } from "../../utils/fileUrl";
-import KineticGrid from "../../components/common/KineticGrid";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -25,7 +24,7 @@ export default function Login() {
   const [submitting, setSubmitting] = useState(false);
 
   const [schoolSettings, setSchoolSettings] = useState({
-    name: "Aswin's Public School",
+    name: "Manchester International School",
     logo: "",
   });
 
@@ -42,7 +41,7 @@ export default function Login() {
         const response = await axiosClient.get("/school-settings");
         if (response.data?.data) {
           setSchoolSettings({
-            name: response.data.data.schoolName || "Aswin's Public School",
+            name: response.data.data.schoolName || "Manchester International School",
             logo: response.data.data.logo || "",
           });
         }
@@ -84,28 +83,20 @@ export default function Login() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-8">
-      {/* Animated Interactive Grid Background matching Dashboard */}
-      <KineticGrid />
-
-      {/* Floating Ambient Glow Orbs for Depth */}
-      <div className="pointer-events-none absolute -top-24 -left-24 h-96 w-96 rounded-full bg-blue-500/15 blur-3xl animate-float-slow" />
-      <div className="pointer-events-none absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-indigo-500/15 blur-3xl animate-pulse-glow" />
-      <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-80 w-80 rounded-full bg-cyan-400/5 blur-3xl" />
-
+    <div className="relative flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950 px-4 py-8">
       {/* Top Right Theme Toggle */}
       <button
         type="button"
         onClick={toggleTheme}
-        className="absolute top-5 right-5 z-20 flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200/80 bg-white/80 text-slate-600 shadow-sm backdrop-blur-md transition hover:bg-white hover:text-slate-900 dark:border-slate-800/80 dark:bg-slate-900/80 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+        className="absolute top-5 right-5 z-20 flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
         title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
       >
         {isDark ? <Sun size={17} /> : <Moon size={17} />}
       </button>
 
-      {/* Main Glassmorphic Login Card */}
+      {/* Main Login Card */}
       <div className="relative z-10 w-full max-w-md animate-entrance">
-        <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-6 shadow-2xl shadow-slate-300/40 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-900/85 dark:shadow-black/70 sm:p-8">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/50 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none sm:p-8">
 
           {/* School Emblem & Header */}
           <div className="text-center">

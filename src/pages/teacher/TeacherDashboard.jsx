@@ -34,6 +34,7 @@ export default function TeacherDashboard() {
   const [pendingSubmissions, setPendingSubmissions] = useState([]);
   const [newAnnouncement, setNewAnnouncement] = useState(null);
   const [classroom, setClassroom] = useState(null);
+  const [myAttendance, setMyAttendance] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -71,6 +72,7 @@ export default function TeacherDashboard() {
         attendanceRes,
         submissionRes,
         announcementRes,
+        teacherAttRes,
       ] = await Promise.allSettled([
         axiosClient.get("/teacher/students"),
         axiosClient.get("/marks?limit=1000"),
@@ -85,7 +87,12 @@ export default function TeacherDashboard() {
           : Promise.resolve({ data: [] }),
         axiosClient.get("/submissions/pending"),
         axiosClient.get("/announcements"),
+        axiosClient.get("/teacher-attendance/stats"),
       ]);
+
+      if (teacherAttRes.status === "fulfilled") {
+        setMyAttendance(teacherAttRes.value.data?.myMonthlyStats || null);
+      }
 
       // Parse Students
       if (studentsRes.status === "fulfilled") {
@@ -292,8 +299,33 @@ export default function TeacherDashboard() {
               </p>
             </div>
 
-            {/* Classroom Info Pill */}
-            <div className="flex shrink-0 items-center gap-2">
+            {/* Classroom Info & Faculty Attendance Pill */}
+            <div className="flex flex-wrap shrink-0 items-center gap-2">
+              {myAttendance && (
+                <div className="rounded-xl border border-emerald-200/80 bg-white/95 px-3.5 py-2.5 shadow-sm dark:border-emerald-900/50 dark:bg-slate-900/95">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                    Faculty Attendance
+                  </p>
+                  <p className="mt-0.5 text-xs font-bold text-slate-900 dark:text-white">
+                    Today:{" "}
+                    <span
+                      className={
+                        myAttendance.todayStatus === "Present"
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : myAttendance.todayStatus === "Absent"
+                          ? "text-rose-600 dark:text-rose-400"
+                          : "text-amber-600 dark:text-amber-400"
+                      }
+                    >
+                      {myAttendance.todayStatus}
+                    </span>{" "}
+                    <span className="text-[10px] text-slate-400 font-normal">
+                      ({myAttendance.percentage}%)
+                    </span>
+                  </p>
+                </div>
+              )}
+
               {classroom ? (
                 <div className="rounded-xl border border-blue-200/80 bg-white/95 px-4 py-2.5 shadow-sm backdrop-blur-sm dark:border-blue-900/50 dark:bg-slate-900/95">
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">

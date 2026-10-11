@@ -28,11 +28,22 @@ function StatusButton({ status, editable, onChange }) {
     }
     return <span className="text-slate-300 dark:text-slate-600">—</span>;
   }
+
+  const colorStyles =
+    status === "Present"
+      ? "border-green-300 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/60 dark:text-green-300 font-bold"
+      : status === "Absent"
+      ? "border-red-300 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/60 dark:text-red-300 font-bold"
+      : status === "Duty Leave"
+      ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/60 dark:text-blue-300 font-bold"
+      : "border-slate-300 bg-white text-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400";
+
   return (
     <select
-      value={status}
+      value={status || ""}
       onChange={(e) => onChange(e.target.value)}
-      className="h-7 w-9 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-gray-900 px-0 text-center text-[10px] font-bold outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+      className={`h-7 w-9 rounded border px-0 text-center text-[10px] outline-none cursor-pointer focus:ring-1 focus:ring-blue-500 transition-colors ${colorStyles}`}
+      title="Click to change status"
     >
       <option value="">-</option>
       <option value="Present">P</option>
@@ -50,7 +61,8 @@ export default function AttendanceRegisterTable({
   monthDays,
   attendanceData,
   today,
-  todaySubmitted,
+  selectedDate,
+  onSelectDate,
   attendanceLoading,
   registerScrollRef,
   todayHeaderRef,
@@ -60,7 +72,6 @@ export default function AttendanceRegisterTable({
   const [year, month] = currentMonth.split("-").map(Number);
   const isToday = (date) => date === today;
   const isFutureDate = (date) => date > today;
-  const isPastDate = (date) => date < today;
 
   return (
     <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-900 shadow-sm dark:border-slate-700 dark:bg-gray-800">
@@ -78,6 +89,10 @@ export default function AttendanceRegisterTable({
                 month: "long",
                 year: "numeric",
               })}
+              {" • "}
+              <span className="text-blue-600 dark:text-blue-400 font-medium">
+                Click any cell or date to edit attendance
+              </span>
             </p>
           </div>
 
@@ -110,18 +125,25 @@ export default function AttendanceRegisterTable({
                   const day = date.split("-")[2];
                   const todayCell = isToday(date);
                   const future = isFutureDate(date);
+                  const isSelected = selectedDate === date;
 
                   return (
                     <th
                       key={date}
                       ref={todayCell ? todayHeaderRef : null}
+                      onClick={() => !future && onSelectDate && onSelectDate(date)}
                       className={`min-w-[48px] border border-slate-200 dark:border-slate-700 px-1 py-2 text-center text-[10px] font-semibold dark:border-slate-600 ${
-                        todayCell
+                        !future ? "cursor-pointer hover:bg-blue-100/60 dark:hover:bg-blue-900/40" : ""
+                      } ${
+                        isSelected
+                          ? "bg-blue-600 text-white dark:bg-blue-600 dark:text-white"
+                          : todayCell
                           ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200"
                           : future
                           ? "bg-slate-200 dark:bg-slate-700 text-slate-400 dark:bg-slate-800"
                           : "text-slate-700 dark:text-slate-200"
                       }`}
+                      title={!future ? `Select ${date}` : "Future date"}
                     >
                       <div>{day}</div>
                       {todayCell && (
@@ -173,39 +195,31 @@ export default function AttendanceRegisterTable({
                         const status = attendanceData[student._id]?.[date];
                         const todayCell = isToday(date);
                         const future = isFutureDate(date);
-                        const past = isPastDate(date);
+                        const isSelected = selectedDate === date;
 
                         return (
                           <td
                             key={date}
                             className={`border border-slate-200 dark:border-slate-700 p-0.5 text-center dark:border-slate-600 ${
-                              todayCell
-                                ? "bg-blue-50 dark:bg-blue-950/30"
+                              isSelected
+                                ? "bg-blue-50/70 dark:bg-blue-950/30 ring-1 ring-inset ring-blue-400"
+                                : todayCell
+                                ? "bg-amber-50/40 dark:bg-amber-950/20"
                                 : future
                                 ? "bg-slate-50 dark:bg-slate-800/60"
                                 : ""
                             }`}
                           >
-                            {status ? (
-                              <StatusButton
-                                status={status}
-                                editable={todayCell && !todaySubmitted}
-                                onChange={(newStatus) =>
-                                  onAttendanceChange(student._id, date, newStatus)
-                                }
-                              />
-                            ) : todayCell ? (
-                              <StatusButton
-                                status=""
-                                editable={!todaySubmitted}
-                                onChange={(newStatus) =>
-                                  onAttendanceChange(student._id, date, newStatus)
-                                }
-                              />
-                            ) : past ? (
+                            {future ? (
                               <span className="text-slate-300 dark:text-slate-600">—</span>
                             ) : (
-                              <span className="text-slate-300 dark:text-slate-600">—</span>
+                              <StatusButton
+                                status={status || ""}
+                                editable={true}
+                                onChange={(newStatus) =>
+                                  onAttendanceChange(student._id, date, newStatus)
+                                }
+                              />
                             )}
                           </td>
                         );

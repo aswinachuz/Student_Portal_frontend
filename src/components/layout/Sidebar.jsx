@@ -26,12 +26,13 @@ export default function Sidebar({ isOpen, setIsOpen }) {
   const confirm = useConfirm();
 
   const [logo, setLogo] = useState("");
+  const [schoolName, setSchoolName] = useState("Manchester International School");
   const fileInputRef = useRef(null);
 
   const [unreadAnnouncements, setUnreadAnnouncements] = useState(0);
 
   // =====================================================
-  // GET SCHOOL LOGO
+  // GET SCHOOL SETTINGS / LOGO
   // =====================================================
 
   const getSchoolLogo = async () => {
@@ -39,10 +40,12 @@ export default function Sidebar({ isOpen, setIsOpen }) {
       const response = await axiosClient.get("/school-settings");
 
       const schoolLogo = response.data.data?.logo || "";
+      const name = response.data.data?.schoolName || "Manchester International School";
 
       setLogo(schoolLogo);
+      setSchoolName(name);
     } catch (error) {
-      console.error("Error loading school logo:", error);
+      console.error("Error loading school settings:", error);
     }
   };
 
@@ -243,7 +246,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
       icon: School,
     },
     {
-      name: "Attendance Correction",
+      name: "Teacher Attendance",
       path: "/admin/attendance",
       roles: ["admin"],
       icon: CalendarCheck,
@@ -394,8 +397,11 @@ export default function Sidebar({ isOpen, setIsOpen }) {
           {/* SCHOOL NAME */}
           <div className="min-w-0 flex-1">
 
-            <h1 className="truncate text-xs font-bold text-slate-800 dark:text-white">
-              Aswin's Public School
+            <h1
+              className="truncate text-xs font-bold text-slate-800 dark:text-white"
+              title={schoolName}
+            >
+              {schoolName}
             </h1>
 
             {/* ADMIN LOGO CONTROLS */}
