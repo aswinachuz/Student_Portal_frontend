@@ -9,6 +9,7 @@ import {
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 import { ConfirmProvider } from "./context/ConfirmContext";
+import { SchoolSettingsProvider } from "./context/SchoolSettingsContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardLayout from "./components/layout/DashboardLayout";
 import ErrorBoundary from "./components/common/ErrorBoundary";
@@ -65,10 +66,11 @@ export default function App() {
     <ErrorBoundary>
       <ToastProvider>
         <ConfirmProvider>
-          <AuthProvider>
-            <BrowserRouter>
-              <Suspense fallback={<RouteFallback />}>
-            <Routes>
+          <SchoolSettingsProvider>
+            <AuthProvider>
+              <BrowserRouter>
+                <Suspense fallback={<RouteFallback />}>
+              <Routes>
               {/* ================= LOGIN ================= */}
               <Route path="/login" element={<Login />} />
 
@@ -193,6 +195,7 @@ export default function App() {
           </Suspense>
             </BrowserRouter>
           </AuthProvider>
+          </SchoolSettingsProvider>
         </ConfirmProvider>
       </ToastProvider>
     </ErrorBoundary>

@@ -13,8 +13,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import axiosClient from "../../api/axiosClient";
-import { getFileUrl } from "../../utils/fileUrl";
+import { useSchoolSettings } from "../../context/SchoolSettingsContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -23,10 +22,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const [schoolSettings, setSchoolSettings] = useState({
-    name: "Manchester International School",
-    logo: "",
-  });
+  const { schoolName, logo, defaultLogo } = useSchoolSettings();
 
   const [isDark, setIsDark] = useState(() =>
     document.documentElement.classList.contains("dark")
@@ -34,24 +30,6 @@ export default function Login() {
 
   const { login } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const response = await axiosClient.get("/school-settings");
-        if (response.data?.data) {
-          setSchoolSettings({
-            name: response.data.data.schoolName || "Manchester International School",
-            logo: response.data.data.logo || "",
-          });
-        }
-      } catch {
-        // Fallback to default school settings
-      }
-    };
-
-    fetchSettings();
-  }, []);
 
   const toggleTheme = () => {
     if (isDark) {
@@ -100,20 +78,30 @@ export default function Login() {
 
           {/* School Emblem & Header */}
           <div className="text-center">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white shadow-lg shadow-blue-500/25 transition-transform hover:scale-105">
-              {schoolSettings.logo ? (
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-lg shadow-blue-500/10 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 transition-transform hover:scale-105">
+              {logo ? (
                 <img
-                  src={getFileUrl(schoolSettings.logo)}
-                  alt="School Logo"
+                  src={logo}
+                  alt={schoolName}
                   className="h-full w-full object-cover"
+                  loading="eager"
+                  onError={(e) => {
+                    if (e.currentTarget.src !== defaultLogo) {
+                      e.currentTarget.src = defaultLogo;
+                    }
+                  }}
                 />
               ) : (
-                <GraduationCap size={28} />
+                <img
+                  src={defaultLogo}
+                  alt={schoolName}
+                  className="h-full w-full object-cover"
+                />
               )}
             </div>
 
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-              {schoolSettings.name}
+              {schoolName}
             </h2>
 
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">

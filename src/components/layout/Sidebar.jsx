@@ -17,6 +17,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { useConfirm } from "../../context/ConfirmContext";
+import { useSchoolSettings } from "../../context/SchoolSettingsContext";
 import axiosClient from "../../api/axiosClient";
 import { getFileUrl } from "../../utils/fileUrl";
 
@@ -24,34 +25,12 @@ export default function Sidebar({ isOpen, setIsOpen }) {
   const { user } = useAuth();
   const toast = useToast();
   const confirm = useConfirm();
+  const { schoolName, logo, defaultLogo, updateLocalSettings, refreshSettings } =
+    useSchoolSettings();
 
-  const [logo, setLogo] = useState("");
-  const [schoolName, setSchoolName] = useState("Manchester International School");
   const fileInputRef = useRef(null);
 
   const [unreadAnnouncements, setUnreadAnnouncements] = useState(0);
-
-  // =====================================================
-  // GET SCHOOL SETTINGS / LOGO
-  // =====================================================
-
-  const getSchoolLogo = async () => {
-    try {
-      const response = await axiosClient.get("/school-settings");
-
-      const schoolLogo = response.data.data?.logo || "";
-      const name = response.data.data?.schoolName || "Manchester International School";
-
-      setLogo(schoolLogo);
-      setSchoolName(name);
-    } catch (error) {
-      console.error("Error loading school settings:", error);
-    }
-  };
-
-  useEffect(() => {
-    getSchoolLogo();
-  }, []);
 
   // =====================================================
   // GET UNREAD ANNOUNCEMENTS
@@ -133,11 +112,15 @@ export default function Sidebar({ isOpen, setIsOpen }) {
   }, [user?._id, user?.role]);
 
   // =====================================================
+  // =====================================================
   // LOGO URL
   // =====================================================
 
   const getLogoUrl = () => {
-    return getFileUrl(logo);
+    if (!logo) return defaultLogo;
+    return logo.startsWith("http://") || logo.startsWith("https://") || logo.startsWith("/")
+      ? logo
+      : getFileUrl(logo);
   };
 
   // =====================================================
@@ -171,9 +154,11 @@ export default function Sidebar({ isOpen, setIsOpen }) {
         }
       );
 
-      const newLogo = response.data.data?.logo || "";
+      const newLogo = response.data.data?.logo;
+      const fullLogoUrl = newLogo ? getFileUrl(newLogo) : defaultLogo;
 
-      setLogo(newLogo);
+      updateLocalSettings({ logo: fullLogoUrl });
+      refreshSettings();
 
       toast.success("School logo updated successfully.");
     } catch (error) {
@@ -195,8 +180,8 @@ export default function Sidebar({ isOpen, setIsOpen }) {
   const removeLogo = async () => {
     const confirmRemove = await confirm({
       title: "Remove Logo",
-      message: "Are you sure you want to remove the school logo?",
-      confirmText: "Remove",
+      message: "Are you sure you want to reset the school logo to default?",
+      confirmText: "Reset",
       cancelText: "Cancel"
     });
 
@@ -207,9 +192,10 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     try {
       await axiosClient.delete("/school-settings/logo");
 
-      setLogo("");
+      updateLocalSettings({ logo: defaultLogo });
+      refreshSettings();
 
-      toast.success("School logo removed.");
+      toast.success("School logo reset to default.");
     } catch (error) {
       console.error("Remove logo error:", error);
 
@@ -378,20 +364,18 @@ export default function Sidebar({ isOpen, setIsOpen }) {
         <div className="flex h-[52px] items-center gap-2 border-b border-slate-200 dark:border-slate-700 px-3 dark:border-slate-700">
 
           {/* SCHOOL LOGO */}
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100 dark:border-slate-600 dark:bg-slate-800">
-
-            {logo ? (
-              <img
-                src={getLogoUrl()}
-                alt="School Logo"
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <span className="text-[9px] font-semibold text-slate-400 dark:text-slate-500">
-                LOGO
-              </span>
-            )}
-
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+            <img
+              src={getLogoUrl()}
+              alt="School Logo"
+              className="h-full w-full object-cover"
+              loading="eager"
+              onError={(e) => {
+                if (e.currentTarget.src !== defaultLogo) {
+                  e.currentTarget.src = defaultLogo;
+                }
+              }}
+            />
           </div>
 
           {/* SCHOOL NAME */}
