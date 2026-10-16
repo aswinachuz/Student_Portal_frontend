@@ -12,11 +12,19 @@ import { getFileUrl } from "../utils/fileUrl";
 const SchoolSettingsContext = createContext(null);
 
 const DEFAULT_SETTINGS = {
-  schoolName: "Manchester International School",
+  schoolName: "Manchester Public School",
   logo: "/school-logo.png",
 };
 
 const STORAGE_KEY = "school_settings_cache";
+
+const normalizeSchoolName = (name) => {
+  if (!name) return DEFAULT_SETTINGS.schoolName;
+  if (name.toLowerCase().includes("aswin") || name === "Manchester International School") {
+    return DEFAULT_SETTINGS.schoolName;
+  }
+  return name;
+};
 
 export const SchoolSettingsProvider = ({ children }) => {
   const [settings, setSettings] = useState(() => {
@@ -25,7 +33,7 @@ export const SchoolSettingsProvider = ({ children }) => {
       if (cached) {
         const parsed = JSON.parse(cached);
         return {
-          schoolName: parsed.schoolName || DEFAULT_SETTINGS.schoolName,
+          schoolName: normalizeSchoolName(parsed.schoolName),
           logo: parsed.logo || DEFAULT_SETTINGS.logo,
         };
       }
@@ -41,8 +49,7 @@ export const SchoolSettingsProvider = ({ children }) => {
       if (response.data?.data) {
         const remoteLogo = response.data.data.logo;
         const newSettings = {
-          schoolName:
-            response.data.data.schoolName || DEFAULT_SETTINGS.schoolName,
+          schoolName: normalizeSchoolName(response.data.data.schoolName),
           logo: remoteLogo ? getFileUrl(remoteLogo) : DEFAULT_SETTINGS.logo,
         };
         setSettings(newSettings);

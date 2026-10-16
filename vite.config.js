@@ -11,7 +11,7 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg", "school-logo.png"],
       manifest: {
-        name: "Manchester International School - Student Portal",
+        name: "Manchester Public School - Student Portal",
         short_name: "Student Portal",
         description: "Official Student and Faculty Management Portal",
         theme_color: "#0f172a",
