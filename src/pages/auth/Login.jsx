@@ -52,9 +52,19 @@ export default function Login() {
       const loggedIn = await login(email, password);
       navigate(`/${loggedIn.role}/dashboard`);
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Invalid credentials. Please try again."
-      );
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.code === "ECONNABORTED" || err.message?.includes("timeout")) {
+        setError(
+          "Request timed out. The backend server might be waking up (Render free tier can take ~45s). Please try again."
+        );
+      } else if (err.code === "ERR_NETWORK" || err.message === "Network Error") {
+        setError(
+          "Cannot reach server. Please check your internet connection or try again shortly."
+        );
+      } else {
+        setError("Invalid credentials. Please try again.");
+      }
     } finally {
       setSubmitting(false);
     }
