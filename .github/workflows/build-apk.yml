@@ -38,14 +38,15 @@ jobs:
       - name: Install Node Dependencies
         run: npm ci
 
-      - name: Build Web App & Sync to Android
+      - name: Ensure Executable Permissions
         run: |
-          npm run build
-          npx cap sync android
+          chmod +x android/gradlew || true
 
-      - name: Make Gradle Wrapper Executable
-        working-directory: android
-        run: chmod +x gradlew
+      - name: Build Web Application
+        run: npm run build
+
+      - name: Sync Web Application to Android
+        run: npx cap sync android
 
       - name: Build Debug APK with Gradle
         working-directory: android
