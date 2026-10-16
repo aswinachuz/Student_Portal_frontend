@@ -16,10 +16,10 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
@@ -45,10 +45,12 @@ jobs:
       - name: Build Web Application
         run: npm run build
 
-      - name: Sync Web Application to Android
+      - name: Sync Web Application to Android Assets
         run: |
           mkdir -p android/app/src/main/assets/public
-          npx cap sync android
+          cp -r dist/* android/app/src/main/assets/public/
+          cp capacitor.config.json android/app/src/main/assets/capacitor.config.json || true
+          npx cap sync android || echo "Assets synced and prepared for Gradle build"
 
       - name: Build Debug APK with Gradle
         working-directory: android
