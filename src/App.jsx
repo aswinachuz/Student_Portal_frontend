@@ -13,6 +13,7 @@ import { SchoolSettingsProvider } from "./context/SchoolSettingsContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardLayout from "./components/layout/DashboardLayout";
 import ErrorBoundary from "./components/common/ErrorBoundary";
+import CapacitorManager from "./components/common/CapacitorManager";
 
 // ================= AUTH =================
 const Login = lazy(() => import("./pages/auth/Login"));
@@ -69,6 +70,7 @@ export default function App() {
           <SchoolSettingsProvider>
             <AuthProvider>
               <BrowserRouter>
+                <CapacitorManager />
                 <Suspense fallback={<RouteFallback />}>
               <Routes>
               {/* ================= LOGIN ================= */}
