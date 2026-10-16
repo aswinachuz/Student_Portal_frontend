@@ -46,7 +46,9 @@ jobs:
         run: npm run build
 
       - name: Sync Web Application to Android
-        run: npx cap sync android
+        run: |
+          mkdir -p android/app/src/main/assets/public
+          npx cap sync android
 
       - name: Build Debug APK with Gradle
         working-directory: android
