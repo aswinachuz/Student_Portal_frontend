@@ -56,11 +56,11 @@ jobs:
         working-directory: android
         run: |
           set +e
-          ./gradlew assembleDebug --stacktrace > build.log 2>&1
+          ./gradlew assembleDebug --no-daemon --stacktrace > build.log 2>&1
           EXIT_CODE=$?
           if [ $EXIT_CODE -ne 0 ]; then
-            ERROR_MSG=$(tail -n 15 build.log | tr '\n' ' ')
-            echo "::error title=Gradle Error::$ERROR_MSG"
+            ROOT_CAUSE=$(grep -A 8 -B 2 "What went wrong:" build.log || tail -n 25 build.log)
+            echo "::error title=Gradle Root Cause::$(echo "$ROOT_CAUSE" | tr '\n' ' ')"
             cat build.log
             exit $EXIT_CODE
           fi
